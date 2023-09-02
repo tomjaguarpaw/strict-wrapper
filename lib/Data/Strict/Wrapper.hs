@@ -356,7 +356,7 @@ instance NotYetImplemented (x1, x2, x3, x4, x5, x6) => Strictly (x1, x2, x3, x4,
 instance NestedStrict t => Strictly (Strict t)
 
 -- | Use the @Strict@ pattern if you want to subsequently match on the
---  @t@ it contains (otherwise it is more efficient to use 'strict').
+--  @t@ it contains (otherwise it is more efficient to use 'unstrict').
 --
 -- @
 -- printIt :: Strict (Maybe Int) -> IO ()
@@ -366,7 +366,7 @@ instance NestedStrict t => Strictly (Strict t)
 --
 -- Make a @Strict t@ using the @Strict@ constructor if you are
 -- constructing it from its individual fields (otherwise it is more
--- efficient to use 'unstrict').
+-- efficient to use 'strict').
 --
 -- @
 -- makeStrict :: Int -> Strict (Int, String)
