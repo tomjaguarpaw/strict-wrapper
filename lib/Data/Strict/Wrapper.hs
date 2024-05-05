@@ -6,6 +6,8 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Data.Strict.Wrapper
   (
@@ -197,6 +199,10 @@ module Data.Strict.Wrapper
   , unstrict
   -- * Class
   , Strictly(matchStrict, constructStrict)
+  -- * Other
+
+  , mapStrict
+
   -- * Error messages
 
   -- | These diagnostic error messages can appear when you try to use
@@ -291,6 +297,15 @@ instance Strictly (Maybe t) where
   constructStrict = \case
     Just j  -> StrictJust j
     Nothing -> StrictNothing
+
+deriving instance Eq t => Eq (Strict (Maybe t))
+
+deriving instance Ord t => Ord (Strict (Maybe t))
+
+deriving instance Show t => Show (Strict (Maybe t))
+
+mapStrict :: (Strictly a, Strictly b) => (a -> b) -> Strict a -> Strict b
+mapStrict f = strict . f . unstrict
 
 instance Strictly (Either t1 t2) where
   data Strict (Either t1 t2) = StrictLeft !t1 | StrictRight !t2
