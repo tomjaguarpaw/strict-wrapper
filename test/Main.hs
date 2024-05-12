@@ -152,6 +152,42 @@ valueTests =
          ])
     ]
 
+ordEquivalent ::
+  (Ord a, Ord (Strict a), Strictly a) =>
+  a ->
+  a ->
+  TestTree (IO (Either String ()))
+ordEquivalent a1 a2 =
+  Leaf $ pure $
+    if compare a1 a2 == compare (strict a1) (strict a2)
+      then pure ()
+      else Left "Failed"
+
+ordTests :: TestTree (IO (Either String ()))
+ordTests =
+  TestTree
+    [("Ord tests",
+      TestTree [
+         -- Maybe
+         ("Nothing, Nothing", ordEquivalent @(Maybe Int) Nothing Nothing),
+         ("Just 1, Just 2", ordEquivalent @(Maybe Int) (Just 1) (Just 2)),
+         ("Just 2, Just 1", ordEquivalent @(Maybe Int) (Just 2) (Just 1)),
+         ("Just 2, Nothing", ordEquivalent @(Maybe Int) (Just 2) Nothing),
+         ("Nothing, Just 1", ordEquivalent @(Maybe Int) Nothing (Just 1)),
+         -- Tuple
+         ("(1, 10), (1, 2)", ordEquivalent @(Int, Int) (1, 10) (1, 2)),
+         ("(1, 2), (1, 10)", ordEquivalent @(Int, Int) (1, 2) (1, 10)),
+         ("(10, 1), (2, 1)", ordEquivalent @(Int, Int) (10, 1) (2, 1)),
+         ("(2, 1), (10, 1)", ordEquivalent @(Int, Int) (2, 1) (10, 1)),
+         -- Either
+         ("Left 1, Left 2", ordEquivalent @(Either Int Int) (Left 1) (Left 2)),
+         ("Left 2, Left 1", ordEquivalent @(Either Int Int) (Left 2) (Left 1)),
+         ("Right 1, Right 2", ordEquivalent @(Either Int Int) (Right 1) (Right 2)),
+         ("Right 2, Right 1", ordEquivalent @(Either Int Int) (Right 2) (Right 1)),
+         ("Left 1, Right 1", ordEquivalent @(Either Int Int) (Left 1) (Right 1)),
+         ("Right 1, Left 1", ordEquivalent @(Either Int Int) (Right 1) (Left 1))
+      ])]
+
 printTestTreeLefts :: TestTree (Either String a) -> IO Bool
 printTestTreeLefts = errorOnTestTreeLeftsPrefix []
   where errorOnTestTreeLeftsPrefix :: [String]
@@ -180,7 +216,8 @@ main :: IO ()
 main = do
   failed1 <- printTestTreeLefts =<< sequence shouldBeBottomTests
   failed2 <- printTestTreeLefts =<< sequence valueTests
-  case failed1 || failed2 of
+  failed3 <- printTestTreeLefts =<< sequence ordTests
+  case failed1 || failed2 || failed3 of
     True  -> do
       putStrLn "Failure"
       exitFailure
