@@ -6,7 +6,11 @@
 module Main where
 
 import Data.List (intercalate)
-import Data.Strict.Wrapper (strict, Strictly, pattern Strict)
+import Data.Strict.Wrapper
+  (strict,
+   Strictly,
+   pattern Strict
+  )
 import Control.Exception (pattern ErrorCall, try, evaluate)
 import System.Exit (exitFailure)
 
