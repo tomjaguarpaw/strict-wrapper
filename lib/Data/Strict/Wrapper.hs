@@ -200,6 +200,10 @@ module Data.Strict.Wrapper
   , unstrict
   -- * Class
   , Strictly(matchStrict, constructStrict)
+  -- * Other
+
+  , mapStrict
+
   -- * Error messages
 
   -- | These diagnostic error messages can appear when you try to use
@@ -330,6 +334,9 @@ deriving instance Ord t => Ord (Strict (Maybe t))
 deriving instance Show t => Show (Strict (Maybe t))
 
 deriving instance Read t => Read (Strict (Maybe t))
+
+mapStrict :: (Strictly a, Strictly b) => (a -> b) -> Strict a -> Strict b
+mapStrict f = strict . f . unstrict
 
 instance Strictly (Either t1 t2) where
   data Strict (Either t1 t2) = StrictLeft !t1 | StrictRight !t2
