@@ -2,13 +2,19 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
 import Data.List (intercalate)
 import Data.Strict.Wrapper
-  (strict,
+  (constructStrict,
+   matchStrict,
+   strict,
+   unstrict,
    Strictly,
+   Strict,
    pattern Strict
   )
 import Control.Exception (pattern ErrorCall, try, evaluate)
@@ -95,6 +101,57 @@ shouldBeBottomTests =
   ]
   where __ = bottom
 
+strictEqualsConstructStrict ::
+  (Strictly t, Eq (Strict t)) => t -> TestTree (IO (Either String ()))
+strictEqualsConstructStrict a =
+  Leaf $ pure $
+    if strict a == constructStrict a
+      then pure ()
+      else Left "Failed"
+
+unstrictInverse :: (Eq a, Strictly a) => a -> TestTree (IO (Either String ()))
+unstrictInverse a =
+  Leaf $ pure $
+    if a == (unstrict . strict) a
+      then pure ()
+      else Left "Failed"
+
+matchStrictInverse :: (Eq a, Strictly a) => a -> TestTree (IO (Either String ()))
+matchStrictInverse a =
+  Leaf $ pure $
+    if a == (matchStrict . strict) a
+      then pure ()
+      else Left "Failed"
+
+valueTests :: TestTree (IO (Either String ()))
+valueTests =
+  TestTree
+    [("strict equals constructStrict",
+      TestTree [
+         ("Left", strictEqualsConstructStrict @(Either Int Int) (Left 1)),
+         ("Right", strictEqualsConstructStrict @(Either Int Int) (Right 1)),
+         ("Nothing", strictEqualsConstructStrict @(Maybe Int) Nothing),
+         ("Just", strictEqualsConstructStrict @(Maybe Int) (Just 1)),
+         ("Tuple", strictEqualsConstructStrict @(Int, Int) (1, 2))
+         ]),
+     ("unstrict is inverse of strict",
+      TestTree [
+         ("Left", unstrictInverse @(Either Int Int) (Left 1)),
+         ("Right", unstrictInverse @(Either Int Int) (Right 1)),
+         ("Nothing", unstrictInverse @(Maybe Int) Nothing),
+         ("Just", unstrictInverse @(Maybe Int) (Just 1)),
+         ("Tuple", unstrictInverse @(Int, Int) (1, 2))
+         ]),
+     ("matchStrict is inverse of strict",
+      TestTree [
+         ("Left", matchStrictInverse @(Either Int Int) (Left 1)),
+         ("Right", matchStrictInverse @(Either Int Int) (Right 1)),
+         ("Nothing", matchStrictInverse @(Maybe Int) Nothing),
+         ("Just", matchStrictInverse @(Maybe Int) (Just 1)),
+         ("Tuple", matchStrictInverse @(Int, Int) (1, 2))
+         ])
+    ]
+
 printTestTreeLefts :: TestTree (Either String a) -> IO Bool
 printTestTreeLefts = errorOnTestTreeLeftsPrefix []
   where errorOnTestTreeLeftsPrefix :: [String]
@@ -121,8 +178,9 @@ printTestTreeLefts = errorOnTestTreeLeftsPrefix []
 
 main :: IO ()
 main = do
-  failed <- printTestTreeLefts =<< sequence shouldBeBottomTests
-  case failed of
+  failed1 <- printTestTreeLefts =<< sequence shouldBeBottomTests
+  failed2 <- printTestTreeLefts =<< sequence valueTests
+  case failed1 || failed2 of
     True  -> do
       putStrLn "Failure"
       exitFailure
