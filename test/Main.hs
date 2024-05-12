@@ -8,6 +8,7 @@ module Main where
 import Data.List (intercalate)
 import Data.Strict.Wrapper (strict, Strictly, pattern Strict)
 import Control.Exception (pattern ErrorCall, try, evaluate)
+import System.Exit (exitFailure)
 
 bottom :: a
 bottom = error bottomS
@@ -118,5 +119,7 @@ main :: IO ()
 main = do
   failed <- printTestTreeLefts =<< sequence shouldBeBottomTests
   case failed of
-    True  -> error "Failure"
+    True  -> do
+      putStrLn "Failure"
+      exitFailure
     False -> pure ()
