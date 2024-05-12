@@ -1,0 +1,105 @@
+# I copied this largely from https://github.com/kowainik/validation-selective/blob/9e9d7fab7b2c7c7c43e13e5aa357fd86c62f6845/.github/workflows/ci.yml
+
+name: CI
+
+on:
+  pull_request:
+    types: [synchronize, opened, reopened]
+  push:
+  workflow_dispatch:
+  schedule:
+    # additionally run once per week (At 00:00 on Sunday) to maintain cache
+    - cron: '0 0 * * 0'
+
+jobs:
+  cabal:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macOS-latest seems to have a lot of problems so let's not
+        # use it for now
+        os: [ubuntu-latest, windows-latest]
+        # We must always use the latest version of cabal because
+        # otherwise ghc-paths, which is a dependency of doctest,
+        # can't be configured.
+        cabal: ["3.10"]
+        ghc:
+          - "8.6.5"
+          - "8.8.4"
+          - "8.10.7"
+          - "9.0.2"
+          - "9.2.7"
+          - "9.4.4"
+          - "9.6.3"
+          - "9.8.1"
+        exclude:
+          - os: macOS-latest
+            ghc: 9.6.3
+          - os: macOS-latest
+            ghc: 9.4.4
+          - os: macOS-latest
+            ghc: 9.2.7
+          - os: macOS-latest
+            ghc: 9.0.2
+          - os: macOS-latest
+            ghc: 8.10.7
+          - os: macOS-latest
+            ghc: 8.8.4
+          - os: macOS-latest
+            ghc: 8.6.5
+
+          - os: windows-latest
+            ghc: 9.6.3
+          - os: windows-latest
+            ghc: 9.4.4
+          - os: windows-latest
+            ghc: 9.2.7
+          - os: windows-latest
+            ghc: 9.0.2
+          - os: windows-latest
+            ghc: 8.10.7
+          - os: windows-latest
+            ghc: 8.8.4
+          - os: windows-latest
+            ghc: 8.6.5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: haskell/actions/setup@v2
+      id: setup-haskell-cabal
+      name: Setup Haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        cabal-version: ${{ matrix.cabal }}
+
+    - name: Configure
+      run: |
+        cabal configure --enable-tests --enable-benchmarks --enable-documentation --test-show-details=direct --write-ghc-environment-files=always
+
+    - name: Freeze
+      run: |
+        cabal freeze
+
+    - uses: actions/cache@v4
+      name: Cache ~/.cabal/store
+      with:
+        path: ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+
+    - name: Install dependencies
+      run: |
+        cabal build all --only-dependencies
+
+    - name: Build
+      run: |
+        cabal build all
+
+    - name: Test
+      run: |
+        cabal test all
+
+    - name: Documentation
+      run: |
+        cabal haddock
