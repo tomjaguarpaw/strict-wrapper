@@ -1,3 +1,5 @@
+# 0.0.2.0
+
 * Add `Semigroup` and `Monoid` instances for `Strict` types (thanks to
   @ozkutuk)
 

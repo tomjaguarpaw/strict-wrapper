@@ -2,7 +2,7 @@ cabal-version:      2.4
 name:               strict-wrapper
 synopsis:           Lightweight strict types
 description:        Lightweight, zero-cost, strict versions of basic data types
-version:            0.0.1.0
+version:            0.0.2.0
 category:           Data
 license:            MIT
 maintainer:         Tom Ellis
