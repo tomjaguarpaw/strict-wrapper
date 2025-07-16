@@ -272,6 +272,16 @@ deriving stock instance (Show t1, Show t2) => Show (Strict (t1, t2))
 
 deriving stock instance (Read t1, Read t2) => Read (Strict (t1, t2))
 
+instance
+  (Semigroup t1, Semigroup t2) =>
+    Semigroup (Strict (t1, t2)) where
+      (<>) = mappendStrict
+
+instance
+  (Monoid t1, Monoid t2) =>
+    Monoid (Strict (t1, t2)) where
+      mempty = memptyStrict
+
 instance Strictly (t1, t2, t3) where
   data Strict (t1, t2, t3) = StrictT3 !t1 !t2 !t3
   strict x = unsafeCoerce $ case x of
@@ -288,6 +298,16 @@ deriving stock instance (Ord t1, Ord t2, Ord t3) => Ord (Strict (t1, t2, t3))
 deriving stock instance (Show t1, Show t2, Show t3) => Show (Strict (t1, t2, t3))
 
 deriving stock instance (Read t1, Read t2, Read t3) => Read (Strict (t1, t2, t3))
+
+instance
+  (Semigroup t1, Semigroup t2, Semigroup t3) =>
+    Semigroup (Strict (t1, t2, t3)) where
+      (<>) = mappendStrict
+
+instance
+  (Monoid t1, Monoid t2, Monoid t3) =>
+    Monoid (Strict (t1, t2, t3)) where
+      mempty = memptyStrict
 
 instance Strictly (t1, t2, t3, t4) where
   data Strict (t1, t2, t3, t4) = StrictT4 !t1 !t2 !t3 !t4
@@ -310,6 +330,16 @@ deriving stock instance (Show t1, Show t2, Show t3, Show t4) =>
 deriving stock instance (Read t1, Read t2, Read t3, Read t4) =>
   Read (Strict (t1, t2, t3, t4))
 
+instance
+  (Semigroup t1, Semigroup t2, Semigroup t3, Semigroup t4) =>
+    Semigroup (Strict (t1, t2, t3, t4)) where
+      (<>) = mappendStrict
+
+instance
+  (Monoid t1, Monoid t2, Monoid t3, Monoid t4) =>
+    Monoid (Strict (t1, t2, t3, t4)) where
+      mempty = memptyStrict
+
 instance Strictly (Maybe t) where
   data Strict (Maybe t) = StrictNothing | StrictJust !t
   strict x = unsafeCoerce $ case x of
@@ -331,6 +361,16 @@ deriving stock instance Show t => Show (Strict (Maybe t))
 
 deriving stock instance Read t => Read (Strict (Maybe t))
 
+instance
+  (Semigroup t1) =>
+    Semigroup (Strict (Maybe t1)) where
+      (<>) = mappendStrict
+
+instance
+  (Monoid t1) =>
+    Monoid (Strict (Maybe t1)) where
+      mempty = memptyStrict
+
 instance Strictly (Either t1 t2) where
   data Strict (Either t1 t2) = StrictLeft !t1 | StrictRight !t2
   strict x = unsafeCoerce $ case x of
@@ -351,6 +391,11 @@ deriving stock instance (Ord t1, Ord t2) => Ord (Strict (Either t1 t2))
 deriving stock instance (Show t1, Show t2) => Show (Strict (Either t1 t2))
 
 deriving stock instance (Read t1, Read t2) => Read (Strict (Either t1 t2))
+
+instance
+  (Semigroup t1, Semigroup t2) =>
+    Semigroup (Strict (Either t1 t2)) where
+      (<>) = mappendStrict
 
 -- | Some data types, such as 'Int' and 'Double', are already as
 -- strict as they can be.  There is no need to wrap them in t'Strict'!
@@ -424,3 +469,9 @@ pattern Strict x <- (matchStrict->x)
   where Strict = constructStrict
 
 {-# COMPLETE Strict :: Strict #-}
+
+mappendStrict :: (Strictly t, Semigroup t) => Strict t -> Strict t -> Strict t
+mappendStrict a1 a2 = strict (unstrict a1 <> unstrict a2)
+
+memptyStrict :: (Strictly t, Monoid t) => Strict t
+memptyStrict = strict mempty
