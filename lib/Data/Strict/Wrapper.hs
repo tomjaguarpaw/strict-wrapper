@@ -323,13 +323,13 @@ instance Strictly (Maybe t) where
     Just j  -> StrictJust j
     Nothing -> StrictNothing
 
-deriving instance Eq t => Eq (Strict (Maybe t))
+deriving stock instance Eq t => Eq (Strict (Maybe t))
 
-deriving instance Ord t => Ord (Strict (Maybe t))
+deriving stock instance Ord t => Ord (Strict (Maybe t))
 
-deriving instance Show t => Show (Strict (Maybe t))
+deriving stock instance Show t => Show (Strict (Maybe t))
 
-deriving instance Read t => Read (Strict (Maybe t))
+deriving stock instance Read t => Read (Strict (Maybe t))
 
 instance Strictly (Either t1 t2) where
   data Strict (Either t1 t2) = StrictLeft !t1 | StrictRight !t2
@@ -344,13 +344,13 @@ instance Strictly (Either t1 t2) where
     Left l  -> StrictLeft l
     Right r -> StrictRight r
 
-deriving instance (Eq t1, Eq t2) => Eq (Strict (Either t1 t2))
+deriving stock instance (Eq t1, Eq t2) => Eq (Strict (Either t1 t2))
 
-deriving instance (Ord t1, Ord t2) => Ord (Strict (Either t1 t2))
+deriving stock instance (Ord t1, Ord t2) => Ord (Strict (Either t1 t2))
 
-deriving instance (Show t1, Show t2) => Show (Strict (Either t1 t2))
+deriving stock instance (Show t1, Show t2) => Show (Strict (Either t1 t2))
 
-deriving instance (Read t1, Read t2) => Read (Strict (Either t1 t2))
+deriving stock instance (Read t1, Read t2) => Read (Strict (Either t1 t2))
 
 -- | Some data types, such as 'Int' and 'Double', are already as
 -- strict as they can be.  There is no need to wrap them in t'Strict'!
